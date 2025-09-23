@@ -14,7 +14,7 @@ The Docker setup provides:
 
 ## Run the container with GUI support
 
-- macOS:
+- macOS (currently not working):
 
   1) Install XQuartz from <https://www.xquartz.org/> and start it.
   2) In XQuartz Preferences > Security, enable: "Allow connections from network clients".
