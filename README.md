@@ -20,7 +20,7 @@ The Docker setup provides:
 
 
 # Run more terminals
-docker exec -it docking-platform-container /bin/bash
+sudo docker exec -it ardupilot-ros-sitl-ws-container /bin/bash
 ```
 
 ## Useful commands inside the container
