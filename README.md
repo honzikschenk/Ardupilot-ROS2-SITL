@@ -14,32 +14,18 @@ The Docker setup provides:
 
 ## Run the container with GUI support
 
-- macOS (currently not working):
-
-  1) Install XQuartz from <https://www.xquartz.org/> and start it.
-  2) In XQuartz Preferences > Security, enable: "Allow connections from network clients".
-  3) Quit and restart XQuartz to apply the setting. Optionally run `xhost + 127.0.0.1` in XQuartz terminal to allow local connections.
-
-- Linux:
-
-  1) Ensure X11 is available (is it desktop and not server?).
-
 ```sh
+# Run first terminal
 ./docker/run.sh
+
+
+# Run more terminals
+docker exec -it docking-platform-container /bin/bash
 ```
-
-Notes:
-
-- If you still get authorization errors on macOS:
-  - Ensure XQuartz is running and "Allow connections from network clients" is enabled; then restart XQuartz.
-  - In an XQuartz Terminal, run: `xhost +localhost` (or `xhost + 127.0.0.1`) to temporarily allow local TCP clients.
-  - Verify host X works (outside Docker): `xeyes` should display a window.
-  - Re-run `./docker/run.sh`.
-- Linux: Ensure X11 is available. The script passes `$DISPLAY` and mounts `/tmp/.X11-unix` automatically. If access is denied, run `xhost +local:docker` on the host.
 
 ## Useful commands inside the container
 
-- Start ArduPilot SITL (ArduCopter) with console and map:
+- Start ArduPilot SITL (ArduCopter):
 
 ```sh
 run_sitl_copter.sh
@@ -54,6 +40,5 @@ run_gz_gui.sh
 - Example: Bridge ROS <-> Gazebo:
 
 ```sh
-# In a separate terminal inside the container
 ros2 run ros_gz_bridge parameter_bridge
 ```
