@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
     libglu1-mesa \
     libxkbcommon-x11-0 \
     python3-tk \
+    geographiclib-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Add Gazebo (gz) Harmonic repository and key
@@ -40,7 +41,14 @@ RUN set -eux; \
         apt-get install -y \
             gz-harmonic \
             ros-jazzy-ros-gz \
+            ros-jazzy-mavros \
+            ros-jazzy-mavros-extras \
+            ros-jazzy-geographic-msgs \
+            ros-jazzy-vision-opencv \
             && rm -rf /var/lib/apt/lists/*
+
+# Initialize GeographicLib datasets required by MAVROS
+RUN geographiclib-get-geoids best; geographiclib-get-gravity egm96; geographiclib-get-magnetic emm2015
 
 # Setup rosdep
 RUN rosdep init || true && rosdep update
@@ -50,6 +58,7 @@ RUN mkdir -p /workspace/src
 
 # Build and install ArduPilot SITL
 ENV ARDUPILOT_HOME=/opt/ardupilot
+ENV GZ_VERSION=harmonic
 RUN set -eux; \
         # Clone ArduPilot
         git clone --recurse-submodules https://github.com/ArduPilot/ardupilot.git ${ARDUPILOT_HOME}; \
@@ -81,24 +90,45 @@ RUN set -eux; \
             python3-pexpect \
             python3-lxml \
             python3-empy \
-            python3-numpy; \
+            python3-numpy \
+            rapidjson-dev \
+            libopencv-dev \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-bad \
+            gstreamer1.0-libav \
+            gstreamer1.0-gl; \
         rm -rf /var/lib/apt/lists/*; \
-        # Python tooling (avoid upgrading apt-managed setuptools/wheel to prevent uninstall errors)
         pip3 install --break-system-packages --no-cache-dir MAVProxy; \
-        # Build SITL (ArduCopter as example)
         cd ${ARDUPILOT_HOME}; \
         ./waf configure --board sitl; \
         ./waf -j"$(nproc)" copter
 
+# Build ardupilot_gazebo plugin
+ENV ARDUPILOT_GZ_HOME=/opt/ardupilot_gazebo
+RUN set -eux; \
+    git clone https://github.com/ArduPilot/ardupilot_gazebo ${ARDUPILOT_GZ_HOME}; \
+    mkdir -p ${ARDUPILOT_GZ_HOME}/build; cd ${ARDUPILOT_GZ_HOME}/build; \
+    cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo; \
+    make -j"$(nproc)"; \
+    echo "export GZ_SIM_SYSTEM_PLUGIN_PATH=${ARDUPILOT_GZ_HOME}/build:\$GZ_SIM_SYSTEM_PLUGIN_PATH" >> /root/.bashrc; \
+    echo "export GZ_SIM_RESOURCE_PATH=${ARDUPILOT_GZ_HOME}/models:${ARDUPILOT_GZ_HOME}/worlds:\$GZ_SIM_RESOURCE_PATH" >> /root/.bashrc
+
 # Convenience: expose sim_vehicle.py and add simple runners
 RUN ln -sf ${ARDUPILOT_HOME}/Tools/autotest/sim_vehicle.py /usr/local/bin/sim_vehicle.py \
-    && printf "#!/usr/bin/env bash\nset -e\ncd ${ARDUPILOT_HOME}\n./Tools/autotest/sim_vehicle.py -v ArduCopter --map --console \"$@\"\n" > /usr/local/bin/run_sitl_copter.sh \
-    && printf "#!/usr/bin/env bash\nset -e\n# Launch Gazebo Harmonic (GUI + server)\nexec gz sim \"$@\"\n" > /usr/local/bin/run_gz_gui.sh \
-    && chmod +x /usr/local/bin/run_sitl_copter.sh /usr/local/bin/run_gz_gui.sh
+    && printf "#!/usr/bin/env bash\nset -e\ncd ${ARDUPILOT_HOME}\n./Tools/autotest/sim_vehicle.py -v ArduCopter -f gazebo-iris --model JSON --map --console \"$@\"\n" > /usr/local/bin/run_sitl_copter.sh \
+    && printf "#!/usr/bin/env bash\nset -e\n# Launch Gazebo Harmonic (GUI + server) with default iris runway world\nexec gz sim -r iris_runway.sdf \"$@\"\n" > /usr/local/bin/run_gz_gui.sh \
+    && printf "#!/usr/bin/env bash\nset -e\n# Convenience combined launch (SITL + Gazebo)\n( run_gz_gui.sh & ); sleep 5; run_sitl_copter.sh\n" > /usr/local/bin/run_ardupilot_gz.sh \
+    && chmod +x /usr/local/bin/run_sitl_copter.sh /usr/local/bin/run_gz_gui.sh /usr/local/bin/run_ardupilot_gz.sh
 
 # Source ROS setup in bashrc
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /root/.bashrc \
-    && echo "source /workspace/install/setup.bash" >> /root/.bashrc
+    && echo "[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash" >> /root/.bashrc
+
+# Colcon workspace placeholder build script (user will mount actual workspace)
+COPY --chown=root:root . /workspace
+
+RUN bash -lc 'if [ -d /workspace/ros2_ws/src ]; then cd /workspace/ros2_ws; colcon build || true; fi'
 
 # Helpful X11 env defaults
 ENV QT_X11_NO_MITSHM=1
