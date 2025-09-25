@@ -16,11 +16,11 @@ The Docker setup provides:
 
 ```sh
 # Run first terminal
-./docker/run.sh
+sudo ./docker/run.sh
 
 
 # Run more terminals
-sudo docker exec -it ardupilot-ros-sitl-ws-container /bin/bash
+sudo ./docker/attach.sh
 ```
 
 ## Useful commands inside the container
@@ -35,10 +35,4 @@ run_sitl_copter.sh
 
 ```sh
 run_gz_gui.sh
-```
-
-- Example: Bridge ROS <-> Gazebo:
-
-```sh
-ros2 run ros_gz_bridge parameter_bridge
 ```
