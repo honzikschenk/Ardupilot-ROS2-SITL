@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 set -e
 
-IMAGE_NAME="ardupilot-ros-sitl-ws"
-CONTAINER_NAME="ardupilot-ros-sitl-ws-container"
+IMAGE_NAME="ros-ws"
+CONTAINER_NAME="ros-container"
+
+if [ -z "${DISPLAY:-}" ]; then
+    if getent hosts host.docker.internal >/dev/null 2>&1; then
+        export DISPLAY=host.docker.internal:0
+    else
+        export DISPLAY=:0
+    fi
+fi
 
 # Base Docker arguments
 DOCKER_ARGS=(
@@ -21,11 +29,10 @@ DOCKER_ARGS=(
 # Allow local docker clients to access X (ignore errors if xhost absent)
 xhost +local:docker > /dev/null 2>&1 || true
 
-# Remove old container if it exists
 if docker ps -aq -f name=^${CONTAINER_NAME}$ > /dev/null 2>&1; then
     if [[ -n "$(docker ps -aq -f name=^${CONTAINER_NAME}$)" ]]; then
         docker rm -f "$CONTAINER_NAME" > /dev/null 2>&1 || true
     fi
 fi
 
-docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" bash
+docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" bash -lc "exec bash"

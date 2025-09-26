@@ -1,10 +1,8 @@
-# ArduPilot SITL + ROS 2 + Gazebo Harmonic
+# The Adityya Special - ROS 2 with MAVROS (for Windows)
 
 The Docker setup provides:
 
 - ROS 2 Jazzy (desktop)
-- Gazebo Harmonic (gz sim) + ros-gz bridge
-- ArduPilot SITL
 
 ## Build the image
 
