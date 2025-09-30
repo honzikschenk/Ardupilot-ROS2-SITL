@@ -42,10 +42,12 @@ POSE_GRAPH.constraint_builder.global_localization_min_score = 0.6
 
 return options
 
--- =============================
--- RUN COMMANDS (LaserScan /scan)
--- =============================
--- Basic run (assumes this file is in the current directory and /scan topic exists):
---   ros2 run cartographer_ros cartographer_node -configuration_directory . -configuration_basename sf45b_2d.lua --ros-args -p expected_sensor_ids:="[scan]" -r scan:=/scan
+-- ./sf45b
+-- ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 laser laser_frame
 --
---   ros2 run cartographer_ros cartographer_occupancy_grid_node -resolution 0.05 -publish_period_sec 1.0
+-- ros2 run cartographer_ros cartographer_node -configuration_directory . -configuration_basename sf45b_2d.lua --ros-args -p provide_odom_frame:=true -p expected_sensor_ids:="[scan]" -r scan:=/scan
+--
+-- ros2 run cartographer_ros cartographer_occupancy_grid_node -resolution 0.05 -publish_period_sec 1.0
+--
+-- rviz2
+--
