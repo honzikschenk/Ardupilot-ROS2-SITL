@@ -13,10 +13,10 @@ options = {
   use_odometry = false,
   use_nav_sat = false,
   use_landmarks = false,
-  num_laser_scans = 0,
+  num_laser_scans = 1,
   num_multi_echo_laser_scans = 0,
   num_subdivisions_per_laser_scan = 1,
-  num_point_clouds = 1,
+  num_point_clouds = 0,
   lookup_transform_timeout_sec = 0.2,
   submap_publish_period_sec = 0.5,
   pose_publish_period_sec = 5e-2,
@@ -35,13 +35,6 @@ TRAJECTORY_BUILDER_2D.missing_data_ray_length = 30.0
 TRAJECTORY_BUILDER_2D.use_imu_data = false
 TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 1
 
-TRAJECTORY_BUILDER_2D.min_z = -0.2
-TRAJECTORY_BUILDER_2D.max_z = 1.0
-
-TRAJECTORY_BUILDER_2D.voxel_filter_size = 0.025
-TRAJECTORY_BUILDER_2D.adaptive_voxel_filter.max_length = 0.5
-TRAJECTORY_BUILDER_2D.adaptive_voxel_filter.min_num_points = 200
-
 POSE_GRAPH.optimization_problem.huber_scale = 1e1
 POSE_GRAPH.optimize_every_n_nodes = 90
 POSE_GRAPH.constraint_builder.min_score = 0.55
@@ -49,5 +42,10 @@ POSE_GRAPH.constraint_builder.global_localization_min_score = 0.6
 
 return options
 
-
--- ros2 run cartographer_ros cartographer_node -configuration_directory . -configuration_basename sf45b_2d.lua -p provide_odom_frame:=true -p expected_sensor_ids:="[points2]" -r points2:=/pointcloud
+-- =============================
+-- RUN COMMANDS (LaserScan /scan)
+-- =============================
+-- Basic run (assumes this file is in the current directory and /scan topic exists):
+--   ros2 run cartographer_ros cartographer_node -configuration_directory . -configuration_basename sf45b_2d.lua --ros-args -p expected_sensor_ids:="[scan]" -r scan:=/scan
+--
+--   ros2 run cartographer_ros cartographer_occupancy_grid_node -resolution 0.05 -publish_period_sec 1.0
