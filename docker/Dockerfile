@@ -44,7 +44,7 @@ RUN geographiclib-get-geoids best && geographiclib-get-gravity egm96 && geograph
 
 RUN rosdep init || true && rosdep update
 
-ARG USERNAME=developer
+ARG USERNAME=root
 ARG USER_UID=1000
 ARG USER_GID=1000
 
