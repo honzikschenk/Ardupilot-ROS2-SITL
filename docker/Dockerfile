@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-cartographer \
     ros-jazzy-cartographer-ros \
     ros-jazzy-cartographer-rviz \
+    ros-jazzy-mavros \
+    ros-jazzy-mavros-extras \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-vcstool \
@@ -40,34 +42,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Initialize GeographicLib datasets required by MAVROS
 RUN geographiclib-get-geoids best && geographiclib-get-gravity egm96 && geographiclib-get-magnetic emm2015
 
-# Setup rosdep
 RUN rosdep init || true && rosdep update
 
-# Create workspace directory inside container & non-root user
 ARG USERNAME=developer
 ARG USER_UID=1000
 ARG USER_GID=1000
-# Create group/user only if the UID/GID are not already present in the base image
+
 RUN set -eux; \
-    if ! getent group "${USER_GID}" >/dev/null; then \
-        groupadd --gid "${USER_GID}" "${USERNAME}"; \
-    else \
-        # Reuse existing group name for provided GID
+    if getent group "${USER_GID}" >/dev/null; then \
         EXISTING_GROUP_NAME="$(getent group ${USER_GID} | cut -d: -f1)"; \
         if [ "${EXISTING_GROUP_NAME}" != "${USERNAME}" ]; then \
-            echo "GID ${USER_GID} already in use by group ${EXISTING_GROUP_NAME}, will use that name."; \
-            USERNAME="${EXISTING_GROUP_NAME}"; \
+            echo "GID ${USER_GID} taken by ${EXISTING_GROUP_NAME}; creating group ${USERNAME} with arbitrary GID"; \
+            groupadd "${USERNAME}" || true; \
         fi; \
-    fi; \
-    if ! id -u "${USER_UID}" >/dev/null 2>&1; then \
-        useradd --uid "${USER_UID}" --gid "${USER_GID}" -m "${USERNAME}"; \
     else \
-        echo "UID ${USER_UID} already exists, reusing existing user."; \
+        groupadd -g "${USER_GID}" "${USERNAME}"; \
+    fi; \
+    if id -u "${USER_UID}" >/dev/null 2>&1; then \
+        echo "UID ${USER_UID} in use; creating ${USERNAME} with next available UID"; \
+        useradd -m -g "${USERNAME}" "${USERNAME}" || true; \
+    else \
+        useradd -m -u "${USER_UID}" -g "${USERNAME}" "${USERNAME}"; \
     fi; \
     mkdir -p /workspace/src; \
-    chown -R "${USER_UID}:${USER_GID}" /workspace
+    chown -R "${USERNAME}:${USERNAME}" /workspace
 
-# Source ROS setup in bashrc
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /root/.bashrc \
     && echo "[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash" >> /root/.bashrc
 
