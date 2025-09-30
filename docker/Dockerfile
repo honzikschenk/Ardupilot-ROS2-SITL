@@ -79,9 +79,9 @@ ENV QT_X11_NO_MITSHM=1
 
 WORKDIR /workspace
 
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/${USERNAME}/.bashrc \
- && echo "[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash" >> /home/${USERNAME}/.bashrc \
- && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.bashrc
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /root/.bashrc \
+ && echo "[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash" >> /root/.bashrc \
+ && chown ${USERNAME}:${USERNAME} /root/.bashrc
 
 USER ${USERNAME}
 
