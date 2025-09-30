@@ -26,6 +26,29 @@ DOCKER_ARGS=(
     --volume "$(pwd):/workspace"
 )
 
+SERIAL_GLOBS=(/dev/ttyAMA0 /dev/serial0 /dev/ttyS0 /dev/ttyUSB* /dev/ttyACM*)
+for glob in "${SERIAL_GLOBS[@]}"; do
+    for dev in $glob; do
+        if [ -e "$dev" ]; then
+            # Avoid adding duplicates
+            DOCKER_ARGS+=(--device "$dev:$dev")
+        fi
+    done
+done
+
+if [ -n "${SERIAL_DEVICES:-}" ]; then
+    for dev in ${SERIAL_DEVICES}; do
+        if [ -e "$dev" ]; then
+            DOCKER_ARGS+=(--device "$dev:$dev")
+        else
+            echo "[warn] Requested serial device $dev not found on host" >&2
+        fi
+    done
+fi
+
+echo "Launching container with serial devices passed through:"
+printf '  %s\n' "${DOCKER_ARGS[@]}" | grep -- '--device' || echo "  (none detected)"
+
 # Allow local docker clients to access X (ignore errors if xhost absent)
 xhost +local:docker > /dev/null 2>&1 || true
 

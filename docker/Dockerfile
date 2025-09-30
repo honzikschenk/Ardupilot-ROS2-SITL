@@ -64,6 +64,11 @@ RUN set -eux; \
     else \
         useradd -m -u "${USER_UID}" -g "${USERNAME}" "${USERNAME}"; \
     fi; \
+    for grp in dialout plugdev tty video; do \
+        if getent group "$grp" > /dev/null 2>&1; then \
+            usermod -a -G "$grp" "${USERNAME}" || true; \
+        fi; \
+    done; \
     mkdir -p /workspace/src; \
     chown -R "${USERNAME}:${USERNAME}" /workspace
 
