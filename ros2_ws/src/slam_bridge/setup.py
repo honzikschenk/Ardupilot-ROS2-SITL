@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'slam_bridge = slam_bridge.nodes.slam_bridge:main',
+            'scan_restamper = slam_bridge.nodes.scan_restamper:main',
         ],
     },
 )
