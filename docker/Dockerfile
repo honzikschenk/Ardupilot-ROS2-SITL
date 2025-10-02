@@ -1,10 +1,8 @@
 FROM ros:jazzy-ros-core
 
-# Set environment
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ROS_DISTRO=jazzy
 
-# Install essential ROS 2 tools and dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-desktop \
     ros-jazzy-cartographer \
@@ -40,7 +38,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     geographiclib-tools \
     && rm -rf /var/lib/apt/lists/*
 
-# Initialize GeographicLib datasets required by MAVROS
 RUN geographiclib-get-geoids best && geographiclib-get-gravity egm96 && geographiclib-get-magnetic emm2015
 
 RUN rosdep init || true && rosdep update
@@ -80,13 +77,13 @@ COPY --chown=${USERNAME}:${USERNAME} . /workspace
 
 RUN bash -lc 'if [ -d /workspace/ros2_ws/src ]; then cd /workspace/ros2_ws; colcon build || true; fi'
 
-RUN git clone https://github.com/LightWare-Optoelectronics/lightwarelidar2 /opt/sf45-driver && \
+RUN bash -lc "source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    git clone https://github.com/LightWare-Optoelectronics/lightwarelidar2 /opt/sf45-driver && \
     cd /opt/sf45-driver && mkdir -p build && cd build && \
-    cmake .. && cmake --build . --parallel $(nproc) || exit 1;
+    cmake .. && cmake --build . --parallel $(nproc)"
 
 RUN ln -s /workspace/docker/run_slam.sh /usr/local/bin/run_slam || true
 
-# Helpful X11 env defaults
 ENV QT_X11_NO_MITSHM=1
 
 WORKDIR /workspace

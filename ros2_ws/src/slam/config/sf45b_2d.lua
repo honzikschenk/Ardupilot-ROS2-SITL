@@ -5,8 +5,8 @@ options = {
   map_builder = MAP_BUILDER,
   trajectory_builder = TRAJECTORY_BUILDER,
   map_frame = "map",
-  tracking_frame = "laser_frame",
-  published_frame = "laser_frame",
+  tracking_frame = "laser", -- "TODO: try laser_frame and see if the timestamp issue persists"
+  published_frame = "laser", -- "TODO: try laser_frame and see if the timestamp issue persists"
   odom_frame = "odom",
   provide_odom_frame = true,
   publish_frame_projected_to_2d = false,
@@ -41,15 +41,3 @@ POSE_GRAPH.constraint_builder.min_score = 0.55
 POSE_GRAPH.constraint_builder.global_localization_min_score = 0.6
 
 return options
-
--- ./sf45b
--- ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 laser laser_frame
---
--- ros2 run cartographer_ros cartographer_node -configuration_directory . -configuration_basename sf45b_2d.lua --ros-args -p provide_odom_frame:=true -p expected_sensor_ids:="[scan]" -r scan:=/scan_fixed
---
--- ros2 run slam_bridge scan_restamper --ros-args -p in_topic:=/scan -p out_topic:=/scan_fixed
---
--- ros2 run cartographer_ros cartographer_occupancy_grid_node -resolution 0.05 -publish_period_sec 1.0
---
--- rviz2
---

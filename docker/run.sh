@@ -30,7 +30,6 @@ SERIAL_GLOBS=(/dev/ttyAMA0 /dev/serial0 /dev/ttyS0 /dev/ttyUSB* /dev/ttyACM*)
 for glob in "${SERIAL_GLOBS[@]}"; do
     for dev in $glob; do
         if [ -e "$dev" ]; then
-            # Avoid adding duplicates
             DOCKER_ARGS+=(--device "$dev:$dev")
         fi
     done
@@ -49,7 +48,6 @@ fi
 echo "Launching container with serial devices passed through:"
 printf '  %s\n' "${DOCKER_ARGS[@]}" | grep -- '--device' || echo "  (none detected)"
 
-# Allow local docker clients to access X (ignore errors if xhost absent)
 xhost +local:docker > /dev/null 2>&1 || true
 
 if docker ps -aq -f name=^${CONTAINER_NAME}$ > /dev/null 2>&1; then
@@ -58,4 +56,7 @@ if docker ps -aq -f name=^${CONTAINER_NAME}$ > /dev/null 2>&1; then
     fi
 fi
 
-docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" bash -lc "exec bash"
+docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" bash -lc "\
+    cp /opt/sf45-driver/build/sf45b /workspace/sf45b 2>/dev/null || true; \
+    chmod +x /workspace/sf45b 2>/dev/null || true; \
+    exec bash"

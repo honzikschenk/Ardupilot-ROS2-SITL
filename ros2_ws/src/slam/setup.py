@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'slam_bridge'
+package_name = 'slam'
 
 setup(
     name=package_name,
@@ -10,20 +10,21 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/slam_system.launch.py']),
-        ('share/' + package_name + '/config', ['config/sf45b_2d.lua']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='developer',
-    maintainer_email='developer@todo.todo',
+    maintainer='root',
+    maintainer_email='root@todo.todo',
     description='TODO: Package description',
     license='Apache-2.0',
-    tests_require=['pytest'],
+    extras_require={
+        'test': [
+            'pytest',
+        ],
+    },
     entry_points={
         'console_scripts': [
-            'slam_bridge = slam_bridge.nodes.slam_bridge:main',
-            'scan_restamper = slam_bridge.nodes.scan_restamper:main',
+            'scan_mavlink_bridge = slam.scan_mavlink_bridge:main'
         ],
     },
 )
